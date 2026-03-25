@@ -1,0 +1,99 @@
+name: 🚀 CI/CD - Pruebas y Despliegue
+
+# ¿Cuándo se ejecuta este pipeline?
+on:
+  push:
+    branches: [main]        # Al hacer push a main
+  pull_request:
+    branches: [main]        # Al abrir un Pull Request hacia main
+
+# Permisos necesarios para desplegar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita despliegues simultáneos
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: PRUEBAS
+  # Se ejecuta siempre (en push Y pull_request)
+  # ─────────────────────────────────────────
+  test:
+    name: ✅ Ejecutar Pruebas
+    runs-on: ubuntu-latest   # Servidor donde corre el pipeline
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: 📥 Descargar código
+        uses: actions/checkout@v4
+
+      # 2. Instalar Node.js
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'       # Guarda caché para ir más rápido
+
+      # 3. Instalar dependencias (npm ci es más estricto que npm install)
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      # 4. ¡Ejecutar las pruebas!
+      - name: 🧪 Ejecutar pruebas
+        run: npm test
+
+  # ─────────────────────────────────────────
+  # JOB 2: BUILD Y DESPLIEGUE
+  # Solo se ejecuta si las pruebas pasan
+  # Solo se ejecuta en push a main (no en PRs)
+  # ─────────────────────────────────────────
+  deploy:
+    name: 🚀 Build y Despliegue
+    runs-on: ubuntu-latest
+    needs: test              # ⚠️ Espera a que el job 'test' termine exitosamente
+    if: github.ref == 'refs/heads/main'  # Solo en la rama main
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # 1. Descargar el código
+      - name: 📥 Descargar código
+        uses: actions/checkout@v4
+
+      # 2. Instalar Node.js
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Instalar dependencias
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      # 4. Construir la aplicación para producción
+      - name: 🔨 Construir aplicación
+        run: npm run build
+        # Resultado: carpeta 'dist/' con los archivos estáticos
+
+      # 5. Preparar GitHub Pages
+      - name: ⚙️ Configurar GitHub Pages
+        uses: actions/configure-pages@v4
+
+      # 6. Subir los archivos del build como "artifact"
+      - name: 📤 Subir archivos del build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'     # La carpeta que genera Vite al hacer build
+
+      # 7. ¡Desplegar en GitHub Pages!
+      - name: 🌐 Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
