@@ -31,7 +31,7 @@ function App() {
                 </svg>
               </div>
               <h3>CI/CD Automatizado</h3>
-              <p>Pipeline completamente automático con GitHub Actions</p>
+              <p>Pipeline completamente automático listo</p>
             </div>
             
             <div className="feature-card">
