@@ -21,3 +21,11 @@ test('el título principal es un h1', () => {
   const h1 = document.querySelector('h1')
   expect(h1).toBeInTheDocument()
 })
+// prueba 4 nombre en la pagina
+
+test('el footer contiene el nombre Juan Diego Acosta M.', () => {
+  render(<App />)
+
+  const nombre = screen.getByText(/Juan Diego Acosta M\./i)
+  expect(nombre).toBeInTheDocument()
+})
