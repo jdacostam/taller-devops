@@ -76,6 +76,7 @@ function App() {
           
           <footer className="footer">
             <p>🎓 Ingeniería de Software - Taller DevOps</p>
+             <p>Presentado por Juan Diego Acosta M.</p>
           </footer>
         </div>
       </div>
